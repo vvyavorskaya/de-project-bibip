@@ -498,6 +498,5 @@ class CarService:
         return result
 
     def _get_model_price(self, model_id: int) -> float:
-        """Получает цену модели по ID"""
         model = self._get_model_by_id(model_id)
         return getattr(model, 'price', 0.0) if model else 0.0
