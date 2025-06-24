@@ -31,7 +31,6 @@ class CarService:
                 open(file_path, 'w').close()
 
     def _get_entity_data_and_line_number(self, file_path: str, entity_id: str) -> Optional[Tuple[str, int]]:
-        """Получает данные сущности и номер строки по ID"""
         index_file_path = self._get_index_file_path(file_path)
 
         line_number = self._find_line_number_in_index(index_file_path, entity_id) 
@@ -45,7 +44,6 @@ class CarService:
             return line_content, line_number
 
     def _get_index_file_path(self, data_file_path: str) -> str:
-        """Возвращает путь к индексному файлу для данного файла данных"""
         if data_file_path == self.models_file:
             return self.models_index_file
         elif data_file_path == self.cars_file:
@@ -56,7 +54,6 @@ class CarService:
             raise ValueError("Неизвестный путь к файлу данных")
 
     def _write_record_and_update_index(self, file_path: str, index_file_path: str, entity_id: str, data: str) -> None:
-        """Записывает данные в файл и обновляет индекс"""
         formatted_data = data.ljust(RECORD_LENGTH) 
         
         with open(file_path, 'a') as f:
@@ -69,7 +66,6 @@ class CarService:
         self._update_index(index_file_path, entity_id, line_number) 
 
     def _update_record_in_file(self, file_path: str, entity_id: str, new_data: str) -> None:
-        """Обновляет запись в файле"""
         old_data_and_line_number = self._get_entity_data_and_line_number(file_path, entity_id)
 
         if old_data_and_line_number is None:
@@ -89,12 +85,10 @@ class CarService:
             f.flush() 
 
     def _car_to_string(self, car: Car) -> str:
-        """Преобразует объект Car в строку для записи в файл"""
         s = f"{car.vin}|{car.model}|{car.price}|{car.date_start.isoformat()}|{car.status.value}"
         return s.ljust(RECORD_LENGTH)
 
     def _string_to_car(self, data_string: str) -> Car:
-        """Преобразует строку из файла в объект Car"""
         parts = data_string.strip().split('|')
         if len(parts) != 5: 
             raise ValueError(f"Неверный формат строки для автомобиля: {data_string}")
@@ -108,14 +102,12 @@ class CarService:
         )
 
     def _model_to_string(self, model: Model) -> str:
-        """Преобразует объект Model в строку для записи в файл"""
         prod_year = getattr(model, 'production_start_year', '')
         price = getattr(model, 'price', '')
         s = f"{model.id}|{model.name}|{model.brand}|{prod_year}|{price}"
         return s.ljust(RECORD_LENGTH)
 
     def _string_to_model(self, data_string: str) -> Model:
-        """Преобразует строку из файла в объект Model"""
         parts = data_string.strip().split('|')
         if len(parts) < 3:
             raise ValueError(f"Неверный формат строки для модели: {data_string}")
@@ -140,12 +132,10 @@ class CarService:
         return model_obj
 
     def _sale_to_string(self, sale: Sale) -> str:
-        """Преобразует объект Sale в строку для записи в файл"""
         s = f"{sale.sales_number}|{sale.car_vin}|{sale.sales_date.isoformat()}|{sale.cost}"
         return s.ljust(RECORD_LENGTH)
 
     def _string_to_sale(self, data_string: str) -> Sale:
-        """Преобразует строку из файла в объект Sale"""
         parts = data_string.strip().split('|')
         if len(parts) != 4:
             raise ValueError(f"Неверный формат строки для продажи: {data_string}")
@@ -158,7 +148,6 @@ class CarService:
         )
 
     def _find_car_by_vin(self, vin: str) -> Optional[Car]:
-        """Находит автомобиль по VIN"""
         car_data_and_line_number = self._get_entity_data_and_line_number(self.cars_file, vin)
         if car_data_and_line_number:
             car_string, _ = car_data_and_line_number
@@ -166,11 +155,9 @@ class CarService:
         return None
 
     def _update_car_status_or_data(self, car: Car) -> None:
-        """Обновляет статус или данные автомобиля"""
         self._update_record_in_file(self.cars_file, car.vin, self._car_to_string(car))
 
     def sell_car(self, sale: Sale) -> Sale:
-        """Продает автомобиль (исправленная версия для работы с тестами)"""
         if not isinstance(sale, Sale):
             raise ValueError("Метод sell_car ожидает объект Sale")
             
@@ -194,7 +181,6 @@ class CarService:
         return sale
 
     def _find_line_number_in_index(self, index_file_path: str, entity_id: str) -> Optional[int]:
-        """Находит номер строки в индексе по ID сущности"""
         if not os.path.exists(index_file_path):
             return None
         with open(index_file_path, 'r') as f:
@@ -205,7 +191,6 @@ class CarService:
         return None
 
     def _update_index(self, index_file: str, entity_id: str, line_number: int) -> None:
-        """Обновляет индексный файл"""
         index_entries = []
         if os.path.exists(index_file):
             with open(index_file, 'r') as f:
@@ -222,17 +207,14 @@ class CarService:
                 f.write(f"{entry[0]}|{entry[1]}\n") 
 
     def add_model(self, model: Model) -> Model:
-        """Добавляет модель автомобиля"""
         self._write_record_and_update_index(self.models_file, self.models_index_file, str(model.id), self._model_to_string(model))
         return model
 
     def add_car(self, car: Car) -> Car:
-        """Добавляет автомобиль"""
         self._write_record_and_update_index(self.cars_file, self.cars_index_file, car.vin, self._car_to_string(car))
         return car
 
     def add_sale(self, sale: Sale) -> Sale:
-        """Добавляет продажу (альтернативный метод для sell_car)"""
         self._write_record_and_update_index(self.sales_file, self.sales_index_file, sale.sales_number, self._sale_to_string(sale))
 
         car_to_update = self._find_car_by_vin(sale.car_vin) 
@@ -244,7 +226,6 @@ class CarService:
         return sale
 
     def get_cars(self, status: CarStatus) -> List[Car]:
-        """Получает список автомобилей по статусу"""
         cars = []
         if not os.path.exists(self.cars_file): 
             return []
@@ -263,7 +244,6 @@ class CarService:
         return cars
 
     def get_car_info(self, vin: str) -> Optional[CarFullInfo]:
-        """Получает полную информацию об автомобиле"""
         car = self._find_car_by_vin(vin)
         if not car:
             raise ValueError(f"Автомобиль с VIN {vin} не найден.")
@@ -292,11 +272,9 @@ class CarService:
         if not car:
             raise ValueError(f"Автомобиль с VIN {vin} не найден.")
     
-    # Проверяем, не существует ли уже автомобиль с новым VIN
         if self._find_car_by_vin(new_vin):
             raise ValueError(f"Автомобиль с VIN {new_vin} уже существует.")
 
-    # Создаем новую запись автомобиля
         updated_car = Car(
             vin=new_vin,
             model=car.model,
@@ -305,20 +283,15 @@ class CarService:
             status=car.status
         )
 
-    # Удаляем старую запись
         self._remove_record_from_file(self.cars_file, vin)
     
-    # Добавляем новую запись
         self.add_car(updated_car)
 
-    # Обновляем ссылки в продажах
         self._update_references_in_sales(vin, new_vin)
 
-    # Возвращаем обновленный автомобиль
         return updated_car
     
     def _remove_record_from_file(self, file_path: str, entity_id: str) -> None:
-        """Удаляет запись из файла"""
         old_data_and_line_number = self._get_entity_data_and_line_number(file_path, entity_id)
         if old_data_and_line_number is None:
             return 
@@ -334,7 +307,6 @@ class CarService:
         self._remove_from_index(self._get_index_file_path(file_path), entity_id)
 
     def _remove_from_index(self, index_file_path: str, entity_id: str) -> None:
-        """Удаляет запись из индекса"""
         index_entries = []
         if os.path.exists(index_file_path):
             with open(index_file_path, 'r') as f:
@@ -348,7 +320,6 @@ class CarService:
                 f.write(f"{entry[0]}|{entry[1]}\n")
 
     def _update_references_in_sales(self, old_vin: str, new_vin: str) -> None:
-        """Обновляет ссылки на VIN в продажах"""
         temp_file = os.path.join(self.root_directory_path, "sales.tmp")
         sales_updated = False
         
@@ -378,7 +349,6 @@ class CarService:
             os.remove(temp_file)
 
     def _rebuild_sales_index(self):
-        """Перестраивает индекс продаж"""
         if not os.path.exists(self.sales_file):
             return
         index_entries = []
@@ -398,7 +368,6 @@ class CarService:
                 f.write(f"{entry[0]}|{entry[1]}\n")
 
     def _get_car_by_vin(self, vin: str) -> Optional[Car]:
-        """Получает автомобиль по VIN (внутренний метод)"""
         line_number = self._find_line_number_in_index(self.cars_index_file, vin)
         if line_number is None:
             return None
@@ -415,7 +384,6 @@ class CarService:
                 return None
 
     def _get_model_by_id(self, model_id: int) -> Optional[Model]:
-        """Получает модель по ID"""
         line_number = self._find_line_number_in_index(self.models_index_file, str(model_id))
         if line_number is None:
             return None
@@ -432,7 +400,6 @@ class CarService:
                 return None
 
     def _get_sale_by_car_id(self, car_id: str) -> Optional[Sale]:
-        """Получает продажу по VIN автомобиля"""
         if not os.path.exists(self.sales_file):
             return None
         with open(self.sales_file, 'r') as f:
@@ -448,7 +415,6 @@ class CarService:
         return None
 
     def revert_sale(self, sales_number: str) -> Car:
-        """Отменяет продажу"""
         sale_info_found = None
         car_vin_from_sale = None 
         temp_file = os.path.join(self.root_directory_path, "sales_temp.txt")
@@ -492,7 +458,6 @@ class CarService:
         model_sales_count = {}
         car_vin_to_model_id = {}
 
-    # Сначала собираем соответствие VIN -> model_id
         with open(self.cars_file, 'r') as f:
             for line in f:
                 if not line.strip():
@@ -503,7 +468,6 @@ class CarService:
                 except (ValueError, IndexError):
                     continue
 
-    # Затем подсчитываем количество продаж для каждой модели
         with open(self.sales_file, 'r') as f:
             for line in f:
                 if not line.strip():
@@ -516,13 +480,11 @@ class CarService:
                 except (ValueError, IndexError):
                     continue
 
-    # Сортируем модели по количеству продаж (по убыванию)
         sorted_models = sorted(
             model_sales_count.items(),
             key=lambda item: (-item[1], self._get_model_price(item[0]))
         )
 
-    # Берем топ-3 модели
         result = []
         for model_id, sales_count in sorted_models[:3]:
             model = self._get_model_by_id(model_id)
