@@ -22,6 +22,9 @@ class Car(BaseModel):
     def index(self) -> str:
         return self.vin
 
+    def to_string(self) -> str:
+        return f"{self.vin}|{self.model_id}|{self.production_start_year}|{self.status.value}|{self.price}|{self.date_start.isoformat()}"
+
 
 class Model(BaseModel):
     id: int

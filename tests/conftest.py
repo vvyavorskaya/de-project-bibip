@@ -1,6 +1,6 @@
 import os
 import tempfile
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from uuid import uuid4
 
 import pytest
@@ -18,7 +18,7 @@ def tmp_dir_root() -> str:
 
 @pytest.fixture
 def run_id() -> str:
-    return f"{datetime.now(UTC).strftime('%Y%m%d%H%M%S')}-{str(uuid4())}"
+    return f"{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}-{str(uuid4())}"
 
 
 @pytest.fixture
